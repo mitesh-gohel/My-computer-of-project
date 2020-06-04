@@ -1,0 +1,138 @@
+
+#include <ESP8266WiFi.h>
+
+const char* ssid = "mitesh";
+const char* password = "12345678";
+
+String s,x;
+int value; 
+
+int i=1;
+int k=1;
+
+int m=1;
+int n=1;
+                                                
+
+// Create an instance of the server
+// specify the port to listen on as an argument
+WiFiServer server(80);
+
+void setup() {
+  Serial.begin(9600);
+  delay(10);
+
+  pinMode(D0, OUTPUT);
+  digitalWrite(D0, HIGH);
+
+  
+  // Connect to WiFi network
+  Serial.println();
+  Serial.println();
+  Serial.print("Connecting to ");
+  Serial.println(ssid);
+  
+  WiFi.begin(ssid, password);
+  
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("");
+  Serial.println("WiFi connected");
+  
+  // Start the server
+  server.begin();
+  Serial.println("Server started");
+
+  // Print the IP address
+  Serial.println(WiFi.localIP());
+}
+
+void loop() {
+
+value = analogRead(A0); //Read data from analog pin and store it to value variable
+  Serial.println(value);
+  if (value<=160){ 
+    Serial.println("Water level: Low"); 
+    if(i==1)
+    {
+    x="Low";
+   
+    }
+  }
+ // else if (value>160 && value<=290){ 
+    //Serial.println("Water level: Medium"); 
+   // x="Medium";
+   // delay(1000);
+    //}
+  else if (value>160){ 
+    Serial.println("Water level: High"); 
+    
+   if(k==1)
+   {
+    x="HIGH";
+   }
+   
+  }
+  delay(1000);
+  // Check if a client has connected
+  WiFiClient client = server.available();
+  if (!client) {
+    return;
+  }
+  
+  // Wait until the client sends some data
+  Serial.println("new client");
+  while(!client.available()){
+    delay(1);
+    
+  }
+  
+  // Read the first line of the request
+  String req = client.readStringUntil('\r');
+  Serial.println(req);
+  client.flush();
+  
+  int a = LOW;
+  if (req .indexOf("/LED=OFF") != -1)  {
+    if(n==1)
+    {
+    digitalWrite(D0, HIGH);
+    x=" ";
+   k++;
+   n++;
+    }
+  }
+  if (req.indexOf("/LED=ON") != -1) 
+  {
+    if(m==1)
+    {
+    digitalWrite(D0, LOW);
+    x=" ";
+    i++;
+    m++;
+    }
+  }
+
+  // Prepare the response
+   s = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n<!DOCTYPE html><html><head></head><body><table border= 1px; bordercolor=\"/white\"; style=\"/width: 100%; background-color: Cyan; color: blue;\" ><tr style=\"/text-align: center\"><td ><h1 >Water level sensor </h1><font size=\"/5\"> <strong>water level :</strong>";
+   s= s+ String(x);
+   s= s+ "<br><br>";
+   s= s+("<a href=\"/LED=ON\"\"><button>Turn On </button></a>");
+   s= s+("<a href=\"/LED=OFF\"\"><button>Turn Off </button></a><br />"); 
+   s= s+ "<br /> <br></font><div style=\"/float: center; margin-left: 120px\"><img src=\"/https://lh6.ggpht.com/AyI5C0xP9_Gpoic98l5W0zCpTM5t37KMh9Q8wUwlIiUMl4relilVQhpqsosFMRACu9g=w300\" width=\"/180\" height=\"/180\"></div></td><br/></td></tr></table></body><br/></td></tr></table></body>";
+
+// s = s + "<head><meta http-equiv='refresh' content='5'></head>";  //for auto refresh
+
+ 
+  // Send the response to the client
+  client.print(s);
+  delay(1);
+  Serial.println("Client disonnected");
+
+  // The client will actually be disconnected 
+  // when the function returns and 'client' object is detroyed
+}
+
+
